@@ -17,25 +17,38 @@ A full-stack, modular ecosystem designed for robust authentication of multimedia
 Deepfake-Detection/
 │
 ├── frontend/                 # Client UI
-│   ├── home.html             # Main dashboard
-│   ├── home.js               # Client-side API mapping logic
-│   ├── index.css             # Glassmorphism/CSS utility classes
-│   └── about.js
+│   ├── about.html            # About page interface
+│   ├── about.js              # About page logic
+│   ├── about.css             # About page styling
+│   ├── home.html             # Main dashboard interface
+│   ├── home.js               # Client-side API mapping logic 
+│   ├── home.css              # Main dashboard styling
+│   ├── tech.html             # Technology details interface
+│   ├── tech.js               # Technology details logic
+│   ├── tech.css              # Technology details styling
+│   └── link.js               # Cross-page navigation utilities
 │
 ├── backend/                  # Node.js Express Server
 │   ├── server.js             # Entrypoint server instance
-│   ├── routes/               # API route definitions (e.g., /upload)
+│   ├── package.json          # Node dependencies (Express, Cors, Multer)
+│   ├── routes/               # API routes
+│   │   └── upload.js         # Video & Image processing API router
 │   ├── utils/                # PyTorch Inference Bridges
 │   │   ├── predict.py        # Single image detection pipeline
-│   │   └── predict_video.py  # Video classification pipeline
+│   │   └── predict_video.py  # Video classification pipeline 
 │   ├── model/                # Compiled .pt & .pth model weights
+│   │   ├── best_video_model.pt
+│   │   └── image_model.pth
 │   └── uploads/              # Local temporary upload buffers
 │
-└── ml/                       # Machine Learning Engineering
+└── ml/                       # Machine Learning Engineering 
     ├── data/                 # Raw/Processed dataset storage
-    ├── train_image_model.py  # Image classifier backbone training
+    ├── preprocess_videos.py  # Dataset transformation operations
+    ├── train_image_model.py  # Image classifier early backbone training
+    ├── train_image_model2.py # Image classifier fine-tuning pipeline
     ├── train_video_model.py  # Hybrid LSTM feature training
-    └── preprocess_videos.py  # Dataset transformation operations
+    ├── train_video_model2.py # High-performance hybrid video model training
+    └── requirements.txt      # Python dependencies
 ```
 
 ---
