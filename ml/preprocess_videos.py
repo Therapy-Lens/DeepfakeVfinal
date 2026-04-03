@@ -1,139 +1,202 @@
 import os
-import glob
+import cv2
 import torch
-from facenet_pytorch import MTCNN
-from PIL import Image
+import numpy as np
 from tqdm import tqdm
+from facenet_pytorch import MTCNN
 
-def get_frame_paths(video_dir):
-    """Get all image frame paths from the directory."""
-    extensions = ['*.png', '*.jpg', '*.jpeg', '*.PNG', '*.JPG', '*.JPEG']
+# =========================
+# CONFIG
+# =========================
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# AUTO-DETECT DATASET PATH (handles typo safely)
+possible_paths = [
+    os.path.join(BASE_DIR, 'data', 'videos', 'faceforencics'),
+    os.path.join(BASE_DIR, 'data', 'videos', 'faceforensics')
+]
+
+VIDEO_ROOT = None
+for p in possible_paths:
+    if os.path.exists(p):
+        VIDEO_ROOT = p
+        break
+
+if VIDEO_ROOT is None:
+    raise Exception("❌ Could not find faceforensics dataset folder")
+
+OUTPUT_ROOT = os.path.join(BASE_DIR, 'data', 'processed_videos')
+
+REAL_OUTPUT_DIR = os.path.join(OUTPUT_ROOT, 'real')
+FAKE_OUTPUT_DIR = os.path.join(OUTPUT_ROOT, 'fake')
+
+NUM_FRAMES = 8
+FRAME_SIZE = 224
+
+FAKE_TYPES = [
+    'Deepfakes',
+    'Face2Face',
+    'FaceShifter',
+    'FaceSwap',
+    'NeuralTextures'
+]
+
+# =========================
+# INIT
+# =========================
+print(f"Using dataset path: {VIDEO_ROOT}")
+print(f"Using device: {DEVICE}")
+
+mtcnn = MTCNN(keep_all=False, device=DEVICE)
+
+os.makedirs(REAL_OUTPUT_DIR, exist_ok=True)
+os.makedirs(FAKE_OUTPUT_DIR, exist_ok=True)
+
+# =========================
+# COUNT EXISTING REAL
+# =========================
+existing_real = [f for f in os.listdir(REAL_OUTPUT_DIR) if f.endswith('.pt')]
+TARGET_FAKE_COUNT = len(existing_real)
+
+if TARGET_FAKE_COUNT == 0:
+    raise Exception("❌ No REAL samples found. Cannot balance dataset.")
+
+print(f"\nExisting REAL samples: {TARGET_FAKE_COUNT}")
+print("We will process SAME number of FAKE samples.\n")
+
+# =========================
+# FRAME EXTRACTION
+# =========================
+def extract_frames(video_dir):
+    extensions = ['.png', '.jpg', '.jpeg']
+    try:
+        all_files = os.listdir(video_dir)
+    except Exception:
+        return None
+        
+    frame_files = [f for f in all_files if any(f.lower().endswith(ext) for ext in extensions)]
+    frame_files.sort()
+    
+    total_frames = len(frame_files)
+
+    if total_frames < NUM_FRAMES:
+        return None
+
+    indices = np.linspace(0, total_frames - 1, NUM_FRAMES).astype(int)
     frames = []
-    for ext in extensions:
-        frames.extend(glob.glob(os.path.join(video_dir, ext)))
-    return sorted(frames)
 
-def process_video(video_dir, mtcnn, target_frames=20):
-    """
-    Reads frames, samples them evenly, detects faces, 
-    and returns a tensor of shape [20, 3, 224, 224].
-    """
-    frame_paths = get_frame_paths(video_dir)
-    if not frame_paths:
-        return None
-        
-    # Sample 20 evenly spaced frames
-    if len(frame_paths) >= target_frames:
-        indices = torch.linspace(0, len(frame_paths)-1, target_frames).long().tolist()
-        sampled_paths = [frame_paths[i] for i in indices]
-    else:
-        # Not enough frames, read all for now
-        sampled_paths = frame_paths
-        
-    processed_frames = []
-    for path in sampled_paths:
-        try:
-            img = Image.open(path).convert('RGB')
-            # Detect face and get tensor of shape [3, 224, 224]
-            face_tensor = mtcnn(img) 
-            if face_tensor is not None:
-                processed_frames.append(face_tensor)
-        except Exception:
-            # Skip corrupted frames safely
+    for idx in indices:
+        img_path = os.path.join(video_dir, frame_files[idx])
+        frame = cv2.imread(img_path)
+        if frame is None:
             continue
-            
-    if not processed_frames:
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        face = mtcnn(frame)
+        if face is None:
+            return None
+
+        # Process MTCNN tensor accurately
+        face = face.permute(1, 2, 0).cpu().numpy()
+        face = cv2.resize(face, (FRAME_SIZE, FRAME_SIZE))
+        face = np.transpose(face, (2, 0, 1))  # (C,H,W)
+
+        frames.append(face)
+
+    if len(frames) != NUM_FRAMES:
         return None
-        
-    # Ensure exactly `target_frames` frames
-    # If fewer -> repeat last frame
-    while len(processed_frames) < target_frames:
-        processed_frames.append(processed_frames[-1].clone())
-        
-    # If more -> trim
-    if len(processed_frames) > target_frames:
-        processed_frames = processed_frames[:target_frames]
-        
-    # Stack into [20, 3, 224, 224]
-    video_tensor = torch.stack(processed_frames)
-    return video_tensor
 
-def main():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    video_root_dir = os.path.join(base_dir, 'data', 'videos')
-    out_dir = os.path.join(base_dir, 'data', 'processed_videos')
-    
-    # User requested to force GPU
-    device = 'cuda'
-    print(f"Using device: {device}")
-    
-    # Initialize MTCNN for face detection
-    mtcnn = MTCNN(image_size=224, margin=20, device=device)
-    
-    MAX_CONSECUTIVE_FAILURES = 50
-    
-    consecutive_failures = 0
-    success_count = 0
-    total_processed = 0
-    
-    video_tasks = []
-    
-    for dataset in ['faceforencics', 'celeb']:
-        root_dir = os.path.join(video_root_dir, dataset)
-        
-        # 1. Process Real videos
-        real_dir = os.path.join(root_dir, 'real')
-        if os.path.exists(real_dir):
-            for seq in sorted(os.listdir(real_dir)):
-                seq_path = os.path.join(real_dir, seq)
-                if os.path.isdir(seq_path):
-                    out_path = os.path.join(out_dir, 'real', f"{dataset}_{seq}.pt")
-                    video_tasks.append((seq_path, out_path))
-                    
-        # 2. Process Fake videos
-        fake_dir = os.path.join(root_dir, 'fake')
-        if os.path.exists(fake_dir):
-            for item in sorted(os.listdir(fake_dir)):
-                item_path = os.path.join(fake_dir, item)
-                if os.path.isdir(item_path):
-                    # Check if this item is a method folder (e.g. Deepfakes) or a direct video sequence
-                    has_subdirs = any(os.path.isdir(os.path.join(item_path, sub)) for sub in os.listdir(item_path))
-                    if has_subdirs:
-                        for seq in sorted(os.listdir(item_path)):
-                            seq_path = os.path.join(item_path, seq)
-                            if os.path.isdir(seq_path):
-                                out_path = os.path.join(out_dir, 'fake', f"{dataset}_{item}_{seq}.pt")
-                                video_tasks.append((seq_path, out_path))
-                    else:
-                        out_path = os.path.join(out_dir, 'fake', f"{dataset}_{item}.pt")
-                        video_tasks.append((item_path, out_path))
-                        
-    print(f"Found {len(video_tasks)} video directories to process.")
-    
-    os.makedirs(os.path.join(out_dir, 'real'), exist_ok=True)
-    os.makedirs(os.path.join(out_dir, 'fake'), exist_ok=True)
-    
-    for in_path, out_path in tqdm(video_tasks, desc="Processing videos"):
-        # Removed MAX_VIDEOS limit check to process all discovered videos
-        try:
-            tensor = process_video(in_path, mtcnn)
-            if tensor is not None:
-                torch.save(tensor, out_path)
-                success_count += 1
-                consecutive_failures = 0
-            else:
-                consecutive_failures += 1
-        except Exception as e:
-            consecutive_failures += 1
-            
-        total_processed += 1
-        
-        # Early Stopping Condition for complete crash protections
-        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-            print("\nWARNING: Too many failures sequentially, stopping preprocessing to avoid errors")
-            break
-            
-    print(f"\nPreprocessing complete. Successfully processed {success_count}/{len(video_tasks)} videos.")
+    return torch.tensor(np.array(frames), dtype=torch.float32)
 
-if __name__ == '__main__':
-    main()
+# =========================
+# COLLECT FAKE VIDEOS
+# =========================
+fake_root = os.path.join(VIDEO_ROOT, 'fake')
+
+if not os.path.exists(fake_root):
+    raise Exception("❌ Fake folder not found")
+
+fake_video_groups = []
+
+print("Scanning fake folders...\n")
+
+for fake_type in FAKE_TYPES:
+    type_path = os.path.join(fake_root, fake_type)
+
+    if not os.path.exists(type_path):
+        print(f"⚠️ Missing: {fake_type}")
+        continue
+
+    videos = [
+        os.path.join(type_path, v)
+        for v in os.listdir(type_path)
+        if os.path.isdir(os.path.join(type_path, v))
+    ]
+
+    print(f"{fake_type}: {len(videos)} videos found")
+    fake_video_groups.append((fake_type, videos))
+
+if len(fake_video_groups) == 0:
+    raise Exception("❌ No fake video folders found")
+
+# =========================
+# BALANCED SAMPLING
+# =========================
+per_type_limit = TARGET_FAKE_COUNT // len(fake_video_groups)
+
+print(f"\nSampling ~{per_type_limit} videos from each type...\n")
+
+selected_videos = []
+
+for fake_type, videos in fake_video_groups:
+    np.random.shuffle(videos)
+    selected = videos[:per_type_limit]
+
+    print(f"{fake_type}: {len(selected)} selected")
+    selected_videos.extend([(fake_type, v) for v in selected])
+
+# Trim extra (safety)
+selected_videos = selected_videos[:TARGET_FAKE_COUNT]
+
+print(f"\nTotal FAKE videos selected: {len(selected_videos)}\n")
+
+# =========================
+# PROCESS FAKE VIDEOS
+# =========================
+processed = 0
+skipped = 0
+
+for fake_type, video_path in tqdm(selected_videos, desc="Processing FAKE videos"):
+    filename = f"{fake_type}_{os.path.basename(video_path)}.pt"
+    save_path = os.path.join(FAKE_OUTPUT_DIR, filename)
+
+    if os.path.exists(save_path):
+        skipped += 1
+        continue
+
+    tensor = extract_frames(video_path)
+
+    if tensor is None:
+        skipped += 1
+        continue
+
+    torch.save(tensor, save_path)
+    processed += 1
+
+# =========================
+# FINAL REPORT
+# =========================
+real_count = len([f for f in os.listdir(REAL_OUTPUT_DIR) if f.endswith('.pt')])
+fake_count = len([f for f in os.listdir(FAKE_OUTPUT_DIR) if f.endswith('.pt')])
+
+print("\n=========================")
+print("PROCESS COMPLETE")
+print(f"Processed FAKE: {processed}")
+print(f"Skipped: {skipped}")
+print(f"\nFINAL BALANCE:")
+print(f"REAL: {real_count}")
+print(f"FAKE: {fake_count}")
+print("=========================")

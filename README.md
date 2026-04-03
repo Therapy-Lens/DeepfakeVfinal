@@ -21,7 +21,7 @@ Deepfake-Detection/
 │   ├── about.js              # About page logic
 │   ├── about.css             # About page styling
 │   ├── home.html             # Main dashboard interface
-│   ├── home.js               # Client-side API mapping logic 
+│   ├── home.js               # Client-side API mapping logic
 │   ├── home.css              # Main dashboard styling
 │   ├── tech.html             # Technology details interface
 │   ├── tech.js               # Technology details logic
@@ -35,13 +35,13 @@ Deepfake-Detection/
 │   │   └── upload.js         # Video & Image processing API router
 │   ├── utils/                # PyTorch Inference Bridges
 │   │   ├── predict.py        # Single image detection pipeline
-│   │   └── predict_video.py  # Video classification pipeline 
+│   │   └── predict_video.py  # Video classification pipeline
 │   ├── model/                # Compiled .pt & .pth model weights
 │   │   ├── best_video_model.pt
 │   │   └── image_model.pth
 │   └── uploads/              # Local temporary upload buffers
 │
-└── ml/                       # Machine Learning Engineering 
+└── ml/                       # Machine Learning Engineering
     ├── data/                 # Raw/Processed dataset storage
     ├── preprocess_videos.py  # Dataset transformation operations
     ├── train_image_model.py  # Image classifier early backbone training
