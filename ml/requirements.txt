@@ -1,0 +1,28 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# Core PyTorch Framework (GPU Accelerated via CUDA 12.1)
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121
+
+# Deep Learning Architectures
+timm==1.0.26                 # EfficientNet pretrained image models
+facenet-pytorch==2.6.0       # MTCNN face detection (video tensors)
+
+# Image & Video Processing
+opencv-python                # Video frame extraction
+Pillow==10.2.0               # Base image parsing
+
+# Data Science & Arrays
+numpy==1.26.4
+pandas
+scikit-learn
+
+# Visualization & Logging
+matplotlib==3.10.8
+seaborn
+tqdm==4.67.3                 # Tracking Progress Bars
+
+# Backend Interface (For Later)
+flask
+flask-cors

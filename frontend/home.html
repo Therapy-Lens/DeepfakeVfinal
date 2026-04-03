@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deepfake Check</title>
+  <link rel="stylesheet" href="home.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="bg-glass-overlay"></div>
+  <div class="vignette-bottom"></div>
+  
+  <nav class="navbar">
+    <a href="home.html" class="nav-btn active">Home</a>
+    <a href="about.html" class="nav-btn">About</a>
+    <a href="tech.html" class="nav-btn">Tech</a>
+  </nav>
+
+  <div class="main-container">
+    <div class="title">Deepfake Check</div>
+    
+    <div class="upload-container" id="upload-box">
+      <div class="upload-text">
+        Drag & Drop files here<br>or<br>Browse Files
+      </div>
+      <button class="upload-btn" onclick="document.getElementById('file-input').click()">Browse Files</button>
+      <input type="file" id="file-input" multiple accept="image/*,video/*" style="display: none;">
+    </div>
+    
+    <div class="preview-grid" id="preview-grid"></div>
+    <div class="video-preview" id="video-preview"></div>
+    
+    <div class="result-section" id="result-section">
+      <div class="result-text" id="result-text"></div>
+      <div class="confidence-bar-container">
+        <div class="confidence-bar" id="confidence-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="link.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>
