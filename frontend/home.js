@@ -80,9 +80,12 @@ fileInput.addEventListener('change', (e) => {
 
 async function processFiles(files) {
     let videoFile = files.find(f => f.type.startsWith('video/'));
+    let audioFile = files.find(f => f.type.startsWith('audio/'));
     let validFiles = [];
 
-    if (videoFile) {
+    if (audioFile) {
+        validFiles = [audioFile];
+    } else if (videoFile) {
         validFiles = [videoFile];
     } else {
         validFiles = files.filter(f => f.type.startsWith('image/'));
@@ -159,6 +162,12 @@ function showPreviews(files) {
             vid.src = URL.createObjectURL(file);
             vid.controls = true;
             videoPreview.appendChild(vid);
+            videoPreview.style.display = 'block';
+        } else if (file.type.startsWith('audio/')) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = URL.createObjectURL(file);
+            videoPreview.appendChild(audio); // Reuse existing robust preview block purely
             videoPreview.style.display = 'block';
         }
     }
