@@ -34,24 +34,18 @@ router.post("/upload", upload.array("files", 10), async (req, res) => {
     const isVideo = files[0].mimetype.startsWith('video');
     const isAudio = files[0].mimetype.startsWith('audio');
     
-    // SAFE GUARD FOR AUDIO FILES
-    if (isAudio) {
-      console.log("Audio file received natively. Sending placeholder response.");
-      res.json({ "prediction": "AUDIO RECEIVED", "confidence": 0 });
-      
-      // Cleanup locally exactly mimicking organic explicit flows natively
-      files.forEach(f => {
-          try {
-              if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
-          } catch (err) { console.error("File delete error:", err); }
-      });
-      return;
-    }
-
     const pythonPath = path.join(__dirname, "../../venv/Scripts/python.exe");
-    const scriptPath = isVideo 
-      ? path.join(__dirname, "../utils/predict_video.py")
-      : path.join(__dirname, "../utils/predict.py");
+    
+    let scriptPath;
+    if (isVideo) {
+        scriptPath = path.join(__dirname, "../utils/predict_video.py");
+    } else if (isAudio) {
+        console.log("Detected AUDIO file");
+        scriptPath = path.join(__dirname, "../utils/predict_audio.py");
+        console.log("Using script:", scriptPath);
+    } else {
+        scriptPath = path.join(__dirname, "../utils/predict.py");
+    }
 
     const { exec } = require("child_process");
     
