@@ -31,22 +31,31 @@ router.post("/upload", upload.array("files", 10), async (req, res) => {
     console.log("Files received:", files.length);
 
     const filePath = files[0].path;
-    const isVideo = files[0].mimetype.startsWith('video');
-    const isAudio = files[0].mimetype.startsWith('audio');
-    
     const pythonPath = path.join(__dirname, "../../venv/Scripts/python.exe");
-    
-    if (isAudio) {
-        console.log("Detected AUDIO file - Saved to .uploads/ directory.");
-        // Returns generic status without triggering python or deleting the file from disk!
-        return res.json({ prediction: "UNCERTAIN", confidence: 0, status: "Audio file saved for development." });
-    }
-    
+    const file = files[0];
+    const ext = path.extname(file.originalname).toLowerCase();
+    const mime = file.mimetype.toLowerCase();
+
+    const audioExts = [".wav", ".mp3", ".mpeg", ".flac", ".ogg", ".m4a"];
+    const videoExts = [".mp4", ".avi", ".mov", ".mkv"];
+    const imageExts = [".jpg", ".jpeg", ".png", ".webp"];
+
+    const isAudio = mime.startsWith('audio') || audioExts.includes(ext);
+    const isVideo = mime.startsWith('video') || videoExts.includes(ext);
+    const isImage = mime.startsWith('image') || imageExts.includes(ext);
+
+    console.log(`Detected file type: ${mime} ${ext} -> Integrated Routing`);
+
     let scriptPath;
-    if (isVideo) {
+    if (isAudio) {
+        scriptPath = path.join(__dirname, "../utils/predict_audio.py");
+    } else if (isVideo) {
         scriptPath = path.join(__dirname, "../utils/predict_video.py");
-    } else {
+    } else if (isImage) {
         scriptPath = path.join(__dirname, "../utils/predict.py");
+    } else {
+        console.error("Unsupported file type attempted:", mime, ext);
+        return res.status(400).json({ error: "Unsupported file type. Please upload Image, Video, or Audio." });
     }
 
     const { spawn } = require("child_process");
