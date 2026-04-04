@@ -69,7 +69,13 @@ uploadBox.addEventListener('dragleave', () => {
 uploadBox.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadBox.classList.remove('dragover');
-    let files = Array.from(e.dataTransfer.files);
+    
+    // Anchor files directly to the DOM input to prevent WebKit/Chromium from aggressively Garbage Collecting Blob URLs!
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+    }
+    
+    let files = Array.from(fileInput.files || e.dataTransfer.files);
     processFiles(files);
 });
 
@@ -167,7 +173,7 @@ function showPreviews(files) {
             const audio = document.createElement('audio');
             audio.controls = true;
             audio.src = URL.createObjectURL(file);
-            videoPreview.appendChild(audio); // Reuse existing robust preview block purely
+            videoPreview.appendChild(audio);
             videoPreview.style.display = 'block';
         }
     }
@@ -176,35 +182,33 @@ function showPreviews(files) {
 function showResult(data) {
     resultSection.style.display = 'block';
     
+    // Clear previous audio diagnostic nodes silently
+    const existingAudioBox = document.getElementById('audio-metrics-box');
+    if (existingAudioBox) existingAudioBox.remove();
+    
+    // Strict display logic for real model results only
     if (data && data.prediction) {
-        if (data.prediction.includes('REAL')) {
-            resultText.textContent = `${data.prediction} (${data.confidence}%)`;
+        let predStr = data.prediction;
+        let confNum = data.confidence || 0;
+
+        if (predStr.includes('REAL')) {
+            resultText.textContent = `${predStr} (${confNum}%)`;
             resultText.style.color = '#4CAF50';
-            confidenceBar.style.width = `${data.confidence}%`;
-        } else if (data.prediction.includes('FAKE')) {
-            resultText.textContent = `${data.prediction} (${data.confidence}%)`;
+            confidenceBar.style.width = `${confNum}%`;
+        } else if (predStr.includes('FAKE')) {
+            resultText.textContent = `${predStr} (${confNum}%)`;
             resultText.style.color = '#FF4C4C';
-            confidenceBar.style.width = `${data.confidence}%`;
+            confidenceBar.style.width = `${confNum}%`;
         } else {
-            resultText.textContent = `UNCERTAIN (${data.confidence}%)`;
-            resultText.style.color = '#FFC107'; // Yellow
-            confidenceBar.style.width = `${data.confidence}%`;
+            resultText.textContent = `UNCERTAIN (${confNum}%)`;
+            resultText.style.color = '#FFC107'; 
+            confidenceBar.style.width = `${confNum}%`;
         }
+        
     } else {
+        // Fallback for Backend Errors
         confidenceBar.style.width = '0%';
-        resultText.textContent = 'Processing...';
-        resultText.style.color = 'white';
-        setTimeout(() => {
-            const isReal = Math.random() > 0.5;
-            if (isReal) {
-                resultText.textContent = 'REAL (82%)';
-                resultText.style.color = '#4CAF50';
-                confidenceBar.style.width = '82%';
-            } else {
-                resultText.textContent = 'FAKE (67%)';
-                resultText.style.color = '#FF4C4C';
-                confidenceBar.style.width = '67%';
-            }
-        }, 1000);
+        resultText.textContent = (data && data.error) ? "ERROR: " + data.error : 'INFERENCE FAILED';
+        resultText.style.color = '#FF4C4C';
     }
 }
