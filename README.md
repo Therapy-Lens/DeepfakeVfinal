@@ -88,7 +88,7 @@ Our inference pipelines are configured leveraging specialized neural graphs engi
 
 1.  **EfficientNet-B4:** Employed specifically regarding standalone Image classification natively mapping facial distortions dynamically.
 2.  **ResNeXt50 + LSTM (Hybrid):** Engineered specifically iterating dynamic sequence behaviors traversing spatial dimensions and sequentially tracking temporals via sequence recurrent endpoints.
-3.  **AASIST:** Dedicated Anti-Spoofing topological frameworks designed natively for robust identification integrations.
+3.  Mel Spectrogram + ResNet18: Audio signals are converted into Mel spectrograms and processed using ResNet18 to detect synthetic voice patterns and frequency anomalies.
 4.  **OpenCV / MTCNN / PyTorch Tools:** Embedded specifically for real-time localized facial bounding and image sequence extractions.
 
 ---
