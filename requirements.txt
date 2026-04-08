@@ -1,0 +1,34 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# Deep Learning Frameworks (GPU Accelerated)
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121
+
+# Model Architectures
+timm==1.0.26
+facenet-pytorch==2.6.0
+
+# Image & Video Processing
+opencv-python
+Pillow==10.2.0
+
+# Audio Processing
+soundfile
+librosa==0.11.0
+
+# Data Science & Arrays
+numpy==1.26.4
+pandas
+scikit-learn==1.8.0
+
+# Visualization & Logging
+matplotlib==3.10.8
+seaborn
+tqdm==4.67.3
+
+# Backend & Utilities
+flask
+flask-cors
+requests
+python-dotenv

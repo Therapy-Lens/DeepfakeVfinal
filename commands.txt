@@ -1,0 +1,45 @@
+# Therapy Lens - Deepfake Detection Platform Setup Commands
+
+This document outlines the sequential commands required to set up the project from scratch.
+
+### 1. Repository & Directory Setup
+# Clone the repository (if not already present)
+git clone <repository_url>
+cd deepfake
+
+### 2. Backend Environment (Node.js)
+# Navigate to backend directory
+cd backend
+
+# Initialize npm if starting fresh (already exists in this repo)
+# npm init -y
+
+# Install external dependencies
+npm install express cors multer axios form-data
+
+# Start the server (development mode)
+node server.js
+
+### 3. Machine Learning Environment (Python)
+# Go back to root directory
+cd ..
+
+# Create Python virtual environment
+python -m venv venv
+
+# Activate Virtual Environment (Windows)
+.\venv\Scripts\activate
+
+# Activate Virtual Environment (Linux/Mac)
+# source venv/bin/activate
+
+# Upgrade pip
+python -m pip install --upgrade pip
+
+# Install Python dependencies from the main requirements file
+pip install -r requirements.txt
+
+### 4. Running the System
+# Ensure Backend is running (from Step 2)
+# Ensure Frontend (home.html) is opened in a browser via a local server (e.g., Live Server)
+# Python tasks are triggered automatically by the Node.js backend.
