@@ -16,39 +16,68 @@ A full-stack, modular ecosystem designed for robust authentication of multimedia
 ```text
 Deepfake-Detection/
 │
-├── frontend/                 # Client UI
-│   ├── about.html            # About page interface
-│   ├── about.js              # About page logic
-│   ├── about.css             # About page styling
-│   ├── home.html             # Main dashboard interface
-│   ├── home.js               # Client-side API mapping logic
-│   ├── home.css              # Main dashboard styling
-│   ├── tech.html             # Technology details interface
-│   ├── tech.js               # Technology details logic
-│   ├── tech.css              # Technology details styling
-│   └── link.js               # Cross-page navigation utilities
+├── .git/                      # Git repository metadata
+├── .gitignore                 # Tracking exclusions
+├── README.md                  # Project documentation
 │
-├── backend/                  # Node.js Express Server
-│   ├── server.js             # Entrypoint server instance
-│   ├── package.json          # Node dependencies (Express, Cors, Multer)
-│   ├── routes/               # API routes
-│   │   └── upload.js         # Video & Image processing API router
-│   ├── utils/                # PyTorch Inference Bridges
-│   │   ├── predict.py        # Single image detection pipeline
-│   │   └── predict_video.py  # Video classification pipeline
-│   ├── model/                # Compiled .pt & .pth model weights
+├── frontend/                  # Client-side UI (Vanilla HTML/JS/CSS)
+│   ├── about.css
+│   ├── about.html
+│   ├── about.js
+│   ├── home.css
+│   ├── home.html
+│   ├── home.js
+│   ├── link.js
+│   ├── tech.css
+│   ├── tech.html
+│   └── tech.js
+│
+├── backend/                   # Node.js Express Server
+│   ├── .uploads/              # Active hidden temporary upload buffer
+│   ├── model/                 # Production Model Weights
+│   │   ├── __pycache__/
+│   │   ├── audio_model.pt
 │   │   ├── best_video_model.pt
 │   │   └── image_model.pth
-│   └── uploads/              # Local temporary upload buffers
+│   ├── node_modules/          # Node dependencies (express, multer, cors, ...) [Total: 87 folders]
+│   ├── routes/
+│   │   └── upload.js          # Master Upload & Script Routing Logic
+│   ├── uploads/               # Legacy upload folder (Unused)
+│   ├── utils/                 # Python Inference Bridges
+│   │   ├── __pycache__/
+│   │   ├── predict.py         # Image detection engine
+│   │   ├── predict_audio.py   # Audio detection engine
+│   │   └── predict_video.py   # Video detection engine
+│   ├── package-lock.json
+│   ├── package.json
+│   └── server.js              # Backend Entrypoint
 │
-└── ml/                       # Machine Learning Engineering
-    ├── data/                 # Raw/Processed dataset storage
-    ├── preprocess_videos.py  # Dataset transformation operations
-    ├── train_image_model.py  # Image classifier early backbone training
-    ├── train_image_model2.py # Image classifier fine-tuning pipeline
-    ├── train_video_model.py  # Hybrid LSTM feature training
-    ├── train_video_model2.py # High-performance hybrid video model training
-    └── requirements.txt      # Python dependencies
+├── ml/                        # Machine Learning Operations (Training & Preprocessing)
+│   ├── __pycache__/           # Compiled Python bytecode
+│   ├── data/                  # Dataset Management
+│   │   ├── audio/             # Raw audio samples
+│   │   ├── images/            # Raw image samples
+│   │   ├── processed_audio/   # Optimized audio tensors
+│   │   ├── processed_videos/  # Extracted frame sequences
+│   │   │   ├── fake/          # (Deepfakes_012_026.pt, ...) [Total: 992 files]
+│   │   │   └── real/          # (faceforencics_000.pt, ...) [Total: 998 files]
+│   │   └── videos/            # Raw video datasets (FaceForensics, Celeb-DF)
+│   ├── preprocess_audios.py
+│   ├── preprocess_videos.py
+│   ├── requirements.txt       # Python dependency manifest
+│   ├── train_audio_model.py
+│   ├── train_fft_model.py     # Frequency-domain analysis training
+│   ├── train_image_model.py
+│   ├── train_image_model2.py
+│   ├── train_video_model.py
+│   └── train_video_model2.py
+│
+└── venv/                      # Python Virtual Environment (Isolated dependencies)
+    ├── Include/
+    ├── Lib/                   # Installed packages (torch, torchvision, etc.) [Total: thousands of files]
+    ├── Scripts/               # Executables (python.exe, pip.exe)
+    ├── share/
+    └── pyvenv.cfg
 ```
 
 ---
