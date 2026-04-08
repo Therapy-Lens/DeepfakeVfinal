@@ -1,11 +1,11 @@
 --extra-index-url https://download.pytorch.org/whl/cu121
 
-# Deep Learning Frameworks (GPU Accelerated)
+# Core PyTorch Framework (Provides ResNet and ResNeXt models via torchvision.models)
 torch==2.5.1+cu121
 torchvision==0.20.1+cu121
 torchaudio==2.5.1+cu121
 
-# Model Architectures
+# Model Architectures (timm provides EfficientNet and ResNeXt variants)
 timm==1.0.26
 facenet-pytorch==2.6.0
 
