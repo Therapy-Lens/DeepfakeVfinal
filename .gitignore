@@ -39,11 +39,14 @@ yarn-error.log
 # Datasets & Temporary Data
 # ============================
 # Data folders
-data/
-ml/data/
+ml/data/*
+!ml/data/README.md
 
 # Temporary user uploads
-backend/uploads/
+backend/.uploads/*
+!backend/.uploads/README.md
+backend/uploads/*
+!backend/uploads/README.md
 
 # ============================
 # Deep Learning Models & Weights
@@ -53,9 +56,8 @@ backend/uploads/
 *.pth
 *.h5
 *.onnx
-backend/model/*.pt
-backend/model/*.pth
-ml/models/
+backend/model/*
+!backend/model/README.md
 
 # ============================
 # OS & IDE Files
